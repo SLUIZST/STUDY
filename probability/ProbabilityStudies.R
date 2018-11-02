@@ -248,6 +248,30 @@ mean(switch)
 
 # =================== CONTINUOUS PROBABILITY ============================
 
+# In a list of numeric values such heights, it's not useful to construct a 
+# distribution that assigns a proportion to each possible outcome
+
+
+# When using distributions to summarize numeric data, it is more practical to 
+# define a function that operates on intervals rather than single values =>
+# emprical cumulative distribution function - eCDF
+
+library(tidyverse)
+library(dslabs)
+data(heights)
+
+x <- heights %>% filter(sex=="Male") %>% .$height
+F <- function(a) mean(x <= a)
+
+# What is the chance that a student is taller than 70? (proportion of students 
+# taller than 70)
+1 - F(70)
+
+# We can use the CDF to compute the probability of any subset. Example: the
+# probability of a student being between the height a an the height b
+# F(b) - F(a)
+
+
 
 
 
