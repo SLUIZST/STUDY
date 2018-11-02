@@ -163,7 +163,7 @@ plot(n, prob)
 # Now, instead of computing the probability of it happening, we'll compute
 # the probability of it not happening
 
-# probability of n people DON'T have the same brthday
+# probability of n people DON'T have the same birthday
 # 1 * 364/365 * 363/365 ... (365 - n + 1) / 365
 
 exact_prob <- function(n){
@@ -178,6 +178,76 @@ lines(n, eprob, col = "red")
 
 # --------------------------------------------------------------------------
 # ===========  How Many Monte Carlo  Experiments Are Enough   ==============
+
+# This is actually a challenge question. One prectical approach is to check the 
+# stability of the estimate
+
+B <- 10 ^ seq(1, 5, len = 100)
+
+
+# Cheking the stability of a MOnte Carlo Simulation with the Birthday Problem 
+# for 22 people
+compute_prob <- function(B, n=22){
+  same_day <- replicate(B, {
+    bdays <- sample(1:365, n, replace=TRUE)
+    any(duplicated(bdays))
+  })
+  mean(same_day)
+}
+
+prob <- sapply(B, compute_prob)
+plot(log10(B), prob, type = "l")
+
+# As B gets bigger and bigger, eventually it starts to stabilize
+
+# --------------------------------------------------------------------------
+# ===========  The Addition Rule   =========================================
+
+# Exemple, to get 21 in the blackjack. Two ways, you can get an ace and a 
+# facecard (A) OR you can get a facecard and an ace (B). A OR B.
+
+# Pr(A or B) = Pr(A) + Pr(B) - Pr(A and B)
+
+#  0.048 = (1/13 * 16/51) + (16/52 * 4/51) - 0
+
+
+# --------------------------------------------------------------------------
+# ===========  The Monty Hall Problem   =========================================
+
+# Simulating the strategy of sticking to same door
+B <- 10000
+stick <- replicate(B, {
+  doors <- as.character(1:3)
+  prize <- sample(c("car", "goat", "goat"))
+  prize_door <- doors[prize == "car"]
+  my_pick <- sample(doors, 1)
+  show <- sample(doors[!doors %in% c(my_pick, prize_door)], 1)
+  stick <- my_pick
+  stick == prize_door
+})
+
+mean(stick)
+
+# Now changing the strategy, switch the door
+
+switch <- replicate(B, {
+  doors <- as.character(1:3)
+  prize <- sample(c("car", "goat", "goat"))
+  prize_door <- doors[prize == "car"]
+  my_pick <- sample(doors, 1)
+  show <- sample(doors[!doors %in% c(my_pick, prize_door)], 1)
+  stick <- my_pick
+  switch <- doors[!doors %in% c(my_pick, show)]
+  switch == prize_door
+})
+
+mean(switch)
+
+# You are switching from the original that had a 1 in 3 chances of being the
+# one to whatever is the other option, which has to have a 2 in 3 chance.
+
+# =================== CONTINUOUS PROBABILITY ============================
+
 
 
 
