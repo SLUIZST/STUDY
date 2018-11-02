@@ -101,5 +101,84 @@ results <- replicate(B, {
 })
 mean(results)
 
+# ---------------------------------------------------------
+# ===========  The Birthday Problem   =====================
+
+# Supposing you're in a clasroom with 50 people. If we assume this is a randomly 
+# selected group, what is the chance that at least two people have the same 
+# birthday?
+
+n <- 50
+bdays <- sample(1:365, n, replace=TRUE)
+
+# using duplicated to check
+
+# example:
+duplicated(c(1,2,3,1,4,3,5))
+
+duplicated(bdays)
+# Checking if there's at least two birthdays are the same
+any(duplicated(bdays))
+
+# Using Monte Carlo
+B <- 10000
+results <- replicate(B, {
+  bdays <- sample(1:365, n, replace=TRUE)
+  any(duplicated(bdays))
+})
+mean(results)
+
+# -------------------------------------------
+# ===========  Sapply   =====================
+
+# When are the chances larger then 50%? Larger than 75%?
+
+# Creating a function to compute fot any group
+compute_prob <- function(n, B=10000){
+  same_day <- replicate(B, {
+    bdays <- sample(1:365, n, replace=TRUE)
+    any(duplicated(bdays))
+  })
+  mean(same_day)
+}
+
+n <- seq(1,60)
+
+# To execute compute_prob for n, we could use a for loop, but it's rarely the 
+# preferred aproach in R
+
+# We can perform operations on entire vectors
+x <- 1:10
+sqrt(x)
+y <- 1:10
+x * y
+
+# Using sapply
+sapply(x, sqrt)
+
+# So...
+prob <- sapply(n, compute_prob)
+plot(n, prob)
+
+# Now, instead of computing the probability of it happening, we'll compute
+# the probability of it not happening
+
+# probability of n people DON'T have the same brthday
+# 1 * 364/365 * 363/365 ... (365 - n + 1) / 365
+
+exact_prob <- function(n){
+  prob_unique <- seq(365, 365 - n + 1)/365
+  1 - prod(prob_unique)
+  # prod => returns the product of all the values present in its arguments.
+}
+
+eprob <- sapply(n, exact_prob)
+plot(n, prob)
+lines(n, eprob, col = "red")
+
+# --------------------------------------------------------------------------
+# ===========  How Many Monte Carlo  Experiments Are Enough   ==============
+
+
 
 
