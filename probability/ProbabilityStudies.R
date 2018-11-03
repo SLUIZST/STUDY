@@ -212,7 +212,7 @@ plot(log10(B), prob, type = "l")
 
 
 # --------------------------------------------------------------------------
-# ===========  The Monty Hall Problem   =========================================
+# ===========  The Monty Hall Problem   =======================================
 
 # Simulating the strategy of sticking to same door
 B <- 10000
@@ -271,8 +271,43 @@ F <- function(a) mean(x <= a)
 # probability of a student being between the height a an the height b
 # F(b) - F(a)
 
+# --------------------------------------------------------------------------
+# ===========  Theoretical Distribution ====================================
 
+# The CDF for the normal distribution is defined by a mathematical formula,
+# which in R is obtained with the function pnorm
 
+# F(a) = pnorm(a, avg, s)
 
+x <- heights %>% filter(sex=="Male") %>% .$height
+1 - pnorm(70.5, mean(x), sd(x))
+
+plot(prop.table(table(x)), xlab = "a = Heights in inches", ylab = "Pr(x = a)")
+
+# => It's much more useful for data analytic purposes to treat this outcome as
+#    a continuous numeric variable
+
+# What's the probability that someone is between 67.5 and 68.5? 68.5 and 69.5? 
+# 69.5 and 70.5
+
+   # Using the data, the actual data
+mean(x <= 68.5) - mean(x <= 67.5)
+mean(x <= 69.5) - mean(x <= 68.5)
+mean(x <= 70.5) - mean(x <= 69.5)
+
+   # Now using approximation
+
+pnorm(68.5, mean(x), sd(x)) - pnorm(67.5, mean(x), sd(x))
+pnorm(69.5, mean(x), sd(x)) - pnorm(68.5, mean(x), sd(x))
+pnorm(70.5, mean(x), sd(x)) - pnorm(69.5, mean(x), sd(x))
+
+# For this intervals, the normal approximation is quite useful
+# For others intervals, those that don't include an integer for exemple, is not
+# that useful
+
+mean(x <= 70.9) - mean(x <= 70.1)
+pnorm(70.9, mean(x), sd(x)) - pnorm(70.1, mean(x), sd(x))
+
+    # => DISCRETIZATION
 
 
