@@ -345,27 +345,6 @@ dat <- gapminder %>% filter(region == "Middle Africa") %>%
 
 # --- Case study: Trump Tweets
 
-library(tidyverse)
-library(ggplot2)
-library(lubridate)
-library(tidyr)
-library(scales)
-set.seed(1)
-
-# -- In general, we can extract data directly from twitter using the \emph{rtweet} package.
-# However, in this case, a group has already compiled data for us and made it available 
-# at http://www.trumptwitterarchive.com.
-
-url <- 'http://www.trumptwitterarchive.com/data/realdonaldtrump/%s.json'
-trump_tweets <- map(2009:2017, ~sprintf(url, .x)) %>%
-  map_df(jsonlite::fromJSON, simplifyDataFrame = TRUE) %>%
-  filter(!is_retweet & !str_detect(text, '^"')) %>%
-  mutate(created_at = parse_date_time(created_at, orders = "a b! d! H!:M!:S! z!* Y!", tz="EST")) 
-
-
-head(trump_tweets)
-
-names(trump_tweets)
 
 
 
