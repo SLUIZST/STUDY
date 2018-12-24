@@ -241,4 +241,130 @@ table(prediction = y_hat, actual = y)
 
 confusionMatrix(data = y_hat, reference = y)
 
+# ----- Comprehension Check: Practice with Machine Learning
+library(tidyverse)
+
+# We will practice building a machine learning algorithm using a new dataset, iris, 
+# that provides multiple predictors for us to use to train. To start, we will remove 
+# the setosa species and we will focus on the versicolor and virginica iris species 
+# using the following code:
+  
+library(caret)
+data(iris)
+iris <- iris[-which(iris$Species=='setosa'),]
+y <- iris$Species
+
+# Q1
+# First let us create an even split of the data into train and test partitions using 
+# createDataPartition. The code with a missing line is given below:
+
+set.seed(2)
+# line of code
+test_index <- createDataPartition(y,  times = 1, p = 0.5, list = FALSE)
+
+test <- iris[test_index,]
+train <- iris[-test_index,]
+
+# Answer
+# Correct: Good choice! The createDataPartition function has a number of parameters that 
+# allow the user to specify a test/training partition by the percentage of data that goes
+# to training. See the associated help file.
+
+# Q2
+# Next we will figure out the singular feature in the dataset that yields the greatest 
+# overall accuracy. You can use the code from the introduction and from Q1 to start your
+# analysis.
+# Using only the train iris data set, which of the following is the singular feature for 
+# which a smart cutoff (simple search) yields the greatest overall accuracy?
+
+train %>% group_by(Species) %>% summarize(mean(Sepal.Length), sd(Sepal.Length))
+train %>% group_by(Species) %>% summarize(mean(Sepal.Width), sd(Sepal.Width))
+train %>% group_by(Species) %>% summarize(mean(Petal.Length), sd(Petal.Length))
+train %>% group_by(Species) %>% summarize(mean(Petal.Width), sd(Petal.Width))
+
+# Petal.Length has the greater mean difference between the two Species and the greater 
+# standard deviation difference
+
+
+# Explanation
+# This sample code can be used to determine that Petal.Length is the most accurate singular
+# feature.
+
+foo <- function(x){
+  rangedValues <- seq(range(x)[1],range(x)[2],by=0.1)
+  sapply(rangedValues,function(i){
+    y_hat <- ifelse(x>i,'virginica','versicolor')
+    mean(y_hat==train$Species)
+  })
+}
+predictions <- apply(train[,-5],2,foo)
+sapply(predictions,max)	
+
+# Q3
+# Using the smart cutoff value calculated on the training data, what is the overall 
+# accuracy in the test data?
+
+
+cutoff <- seq(4.0, 6.0, by = 0.1)
+
+F_1 <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(train$Petal.Length > x, "virginica", "versicolor") %>%
+    factor(levels = levels(test$Species))   
+  
+  y_hat <- factor(test$Species)
+  
+  F_meas(data = y_hat, reference = factor(test$Species))
+})
+
+# Checking  "Error in F_meas.default(data = y_hat, reference = factor(y)) : 
+#           input data must have the same two levels 
+length(levels(factor(test$Species)))
+length(levels(y_hat))
+length(levels(y))
+
+plot(cutoff, F_1)
+
+max(F_1)
+
+best_cutoff <- cutoff[which.max(F_1)]
+best_cutoff
+
+# chutando o best cutoff
+y_hat <- ifelse(train$Petal.Length > 4.8, "virginica", "versicolor") %>%
+  factor(levels = levels(test$Species))  
+
+mean(y_hat == train$Species)  
+
+confusionMatrix(data = y_hat, reference = test$Species)
+
+# Checking in the test data
+y_hat <- ifelse(test$Petal.Length > 4.8, "virginica", "versicolor") %>%
+  factor(levels = levels(test$Species))  
+
+mean(y_hat == test$Species)  
+
+confusionMatrix(data = y_hat, reference = test$Species)
+
+# Explanation
+# The code below can be used to calculate the overall accuracy:
+  
+predictions <- foo(train[,3])
+rangedValues <- seq(range(train[,3])[1],range(train[,3])[2],by=0.1)
+cutoffs <-rangedValues[which(predictions==max(predictions))]
+
+y_hat <- ifelse(test[,3]>cutoffs[1],'virginica','versicolor')
+mean(y_hat==test$Species)
+
+# Q4
+# Notice that we had an overall accuracy greater than 96% in the training data, but 
+# the overall accuracy was lower in the test data. This can happen often if we overtrain. 
+# In fact, it could be the case that a single feature is not the best choice. For example,
+# a combination of features might be optimal. Using a single feature and optimizing the 
+# cutoff as we did on our training data can lead to overfitting.
+
+# Given that we know the test data, we can treat it like we did our training data to see 
+# if the same feature with a different cutoff will optimize our predictions.
+
+# Which feature best optimizes our overall accuracy?
+
 
