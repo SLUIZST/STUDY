@@ -355,7 +355,7 @@ cutoffs <-rangedValues[which(predictions==max(predictions))]
 y_hat <- ifelse(test[,3]>cutoffs[1],'virginica','versicolor')
 mean(y_hat==test$Species)
 
-# Q4
+# ----------- Q4
 # Notice that we had an overall accuracy greater than 96% in the training data, but 
 # the overall accuracy was lower in the test data. This can happen often if we overtrain. 
 # In fact, it could be the case that a single feature is not the best choice. For example,
@@ -367,4 +367,82 @@ mean(y_hat==test$Species)
 
 # Which feature best optimizes our overall accuracy?
 
+# using  the explannation of the Q2
+
+foo <- function(x){
+  rangedValues <- seq(range(x)[1],range(x)[2],by=0.1)
+  sapply(rangedValues,function(i){
+    y_hat <- ifelse(x>i,'virginica','versicolor')
+    mean(y_hat==test$Species)
+  })
+}
+predictions <- apply(test[,-5],2,foo)
+sapply(predictions,max)	
+
+# ==>  Petal.Width
+
+# comparing mean e sd of the predictors
+test %>% group_by(Species) %>% summarize(mean(Sepal.Length), sd(Sepal.Length))
+test %>% group_by(Species) %>% summarize(mean(Sepal.Width), sd(Sepal.Width))
+test %>% group_by(Species) %>% summarize(mean(Petal.Length), sd(Petal.Length))
+test %>% group_by(Species) %>% summarize(mean(Petal.Width), sd(Petal.Width))
+
+# Q5
+# Now we will perform some exploratory data analysis on the data.
+# Notice that Petal.Length and Petal.Width in combination could potentially be more 
+# information than either feature alone.
+
+# Optimize the combination of the cutoffs for Petal.Length and Petal.Width in the train 
+# data and report the overall accuracy when applied to the test dataset. For simplicity, 
+# create a rule that if either the length OR the width is greater than the length cutoff 
+# or the width cutoff then virginica or versicolor is called. (Note, the F1 will be 
+# similarly high in this example.)
+
+# What is the overall accuracy for the test data now?
+
+# cutoffs for Petal.Length
+predictions_1 <- foo(train[,3])
+rangedValues_1 <- seq(range(train[,3])[1],range(train[,3])[2],by=0.1)
+cutoffs_1 <-rangedValues_1[which(predictions_1==max(predictions_1))]
+
+# cutoffs for Petal.Width
+predictions_2 <- foo(train[,4])
+rangedValues_2 <- seq(range(train[,4])[1],range(train[,4])[2],by=0.1)
+cutoffs_2 <-rangedValues_2[which(predictions_2==max(predictions_2))]
+
+y_hat <- ifelse(test[,3]>cutoffs_1[1],'virginica','versicolor')
+
+y_hat <- ifelse(test[,4]>cutoffs_2[1],'virginica','versicolor')
+
+y_hat <- ifelse(test[,3]>cutoffs_1[1] & test[,4]>cutoffs_2[1],'virginica','versicolor')
+
+mean(y_hat==test$Species)
+
+# Explanation
+# The following code can be used to calculate this overall accuracy:
+  
+library(caret)
+data(iris)
+iris <- iris[-which(iris$Species=='setosa'),]
+y <- iris$Species
+
+plot(iris,pch=21,bg=iris$Species)
+
+set.seed(2)
+test_index <- createDataPartition(y,times=1,p=0.5,list=FALSE)
+test <- iris[test_index,]
+train <- iris[-test_index,]
+
+petalLengthRange <- seq(range(train[,3])[1],range(train[,3])[2],by=0.1)
+petalWidthRange <- seq(range(train[,4])[1],range(train[,4])[2],by=0.1)
+cutoffs <- expand.grid(petalLengthRange,petalWidthRange)
+
+id <- sapply(seq(nrow(cutoffs)),function(i){
+  y_hat <- ifelse(train[,3]>cutoffs[i,1] | train[,4]>cutoffs[i,2],'virginica','versicolor')
+  mean(y_hat==train$Species)
+}) %>% which.max
+
+optimalCutoff <- cutoffs[id,] %>% as.numeric
+y_hat <- ifelse(test[,3]>optimalCutoff[1] & test[,4]>optimalCutoff[2],'virginica','versicolor')
+mean(y_hat==test$Species)
 
