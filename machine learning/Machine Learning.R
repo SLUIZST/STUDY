@@ -446,3 +446,41 @@ optimalCutoff <- cutoffs[id,] %>% as.numeric
 y_hat <- ifelse(test[,3]>optimalCutoff[1] & test[,4]>optimalCutoff[2],'virginica','versicolor')
 mean(y_hat==test$Species)
 
+
+# ========== Comprehension Check: Conditional Probabilities Review
+
+set.seed(1)
+disease <- sample(c(0,1), size=1e6, replace=TRUE, prob=c(0.98,0.02))
+test <- rep(NA, 1e6)
+test[disease==0] <- sample(c(0,1), size=sum(disease==0), replace=TRUE, prob=c(0.90,0.10))
+test[disease==1] <- sample(c(0,1), size=sum(disease==1), replace=TRUE, prob=c(0.15, 0.85))
+
+# Q2
+# What is the probability that a test is positive?
+mean(test)
+
+# Q3
+# What is the probability that an individual has the disease if the test is negative?
+mean(disease[test==0])
+
+# Q4
+# What is the probability that you have the disease if the test is positive?
+#  Remember: calculate the conditional probability the disease is positive assuming a 
+#  positive test.
+mean(disease[test==1])
+
+# Explanation
+# The probability of having the disease given a positive test can be calculated using 
+# mean(disease[test==1]==1)
+mean(disease[test==1]==1)
+
+# Q5
+# If the test is positive, what is the relative risk of having the disease?
+# First calculate the probability of having the disease given a positive test, then 
+# normalize it against the disease prevalence.  
+
+# Explanation
+# The relative risk can be calculated using mean(disease[test==1]==1)/mean(disease==1)
+mean(disease[test==1]==1)/mean(disease==1)
+
+
