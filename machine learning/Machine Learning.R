@@ -560,28 +560,32 @@ dat <- MASS::mvrnorm(n = 100, c(69, 69), Sigma) %>%
 # course inside a call to replicate using a seed of 1.
 
 # -- Testing RMSE
-actual <- c(1.1, 1.9, 3.0, 4.4, 5.0, 5.6)
-predicted <- c(0.9, 1.8, 2.5, 4.5, 5.0, 6.2)
-rmse(actual, predicted)
+#actual <- c(1.1, 1.9, 3.0, 4.4, 5.0, 5.6)
+#predicted <- c(0.9, 1.8, 2.5, 4.5, 5.0, 6.2)
+#rmse(actual, predicted)
 
 library(caret)
-set.seed(2)
-y <- dat$y
-test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+#set.seed(2)
+#y <- dat$y
+#test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
 
-train_set <- dat %>% slice(-test_index)
-test_set  <- dat %>% slice(test_index)
+#train_set <- dat %>% slice(-test_index)
+#test_set  <- dat %>% slice(test_index)
 
 # another way
-train_set <- dat[-test_index,]
-test_set  <- dat[test_index,]
+#train_set <- dat[-test_index,]
+#test_set  <- dat[test_index,]
 
-library(ModelMetrics)
-rmse(test_set$x, train_set$x)
+#avg <- mean(train_set$x)
+#mean((avg - train_set$x)^2)
 
-length(train_set$x)
-length(test_set$x)
+#library(ModelMetrics)
+#rmse(test_set$x, train_set$x)
 
+#length(train_set$x)
+#length(test_set$x)
+
+set.seed(1)
 N <- 100
 rmse_vet <- replicate(N, {
   y <- dat$y
@@ -590,18 +594,92 @@ rmse_vet <- replicate(N, {
   train_set <- dat %>% slice(-test_index)
   test_set  <- dat %>% slice(test_index)
 
-  rmse(test_set$x, train_set$x)  
+  fit <- lm(y ~ x, data = train_set)
+  fit$coef
+  
+  y_hat <- predict(fit, test_set)
+  
+  #When calculating the RMSE, take the square root of the average of the squared differences. 
+  #RMSE<-sqrt(mean((y_hat - test$y)^2))
+  #rmse(y_hat, train_set$x)  
+  
+  sqrt(mean((y_hat - test_set$y)^2))
 })
 
-x <- !is.nan(rmse_vet)
-rmse_vet2 <- rmse_vet[x]
+#x <- !is.nan(rmse_vet)
+#rmse_vet2 <- rmse_vet[x]
 
-x <- !is.infinite(rmse_vet2)
-rmse_vet3 <- rmse_vet2[x]
+#x <- !is.infinite(rmse_vet2)
+#rmse_vet3 <- rmse_vet2[x]
 
 
-mean(rmse_vet3)
-sd(rmse_vet3)
+mean(rmse_vet)
+sd(rmse_vet)
 
+# Q2
+# Now we will repeat the above but using larger datasets. Repeat the previous exercise but 
+# for datasets with n <- c(100, 500, 1000, 5000, 10000). Save the average and standard 
+# deviation of RMSE from the 100 repetitions using a seed of 1. 
+# Hint: use the sapply or map functions.
+
+
+rmse_f <- function(n){
+  #set.seed(1)
+  Sigma <- 9*matrix(c(1.0, 0.5, 0.5, 1.0), 2, 2)
+  dat <- MASS::mvrnorm(n, c(69, 69), Sigma) %>%
+         data.frame() %>% setNames(c("x", "y"))
+  
+  set.seed(1)
+  N <- 100
+  rmse_vet <- replicate(N, {
+    y <- dat$y
+    test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+    
+    train_set <- dat %>% slice(-test_index)
+    test_set  <- dat %>% slice(test_index)
+    
+    fit <- lm(y ~ x, data = train_set)
+    
+    y_hat <- predict(fit, test_set)
+    
+    #When calculating the RMSE, take the square root of the average of the squared differences. 
+    #RMSE<-sqrt(mean((y_hat - test$y)^2))
+    #rmse(y_hat, train_set$x)  
+    
+    sqrt(mean((y_hat - test_set$y)^2))
+  })
+  
+  list(mean(rmse_vet), sd(rmse_vet))
+} 
+
+n <- c(100, 500, 1000, 5000, 10000)
+
+# TEST
+r100 <- rmse_f(100)
+mean(r100)
+sd(r100)
+
+r500 <- rmse_f(500)
+mean(r500)
+sd(r500)
+
+r1000 <- rmse_f(1000)
+mean(r1000)
+sd(r1000)
+
+r5000 <- rmse_f(5000)
+mean(r5000)
+sd(r5000)
+
+r10000 <- rmse_f(10000)
+mean(r10000)
+sd(r10000)
+
+set.seed(1)
+rmse_sapply <- sapply(n, rmse_f)
+
+# CORRECT
+# mean 100 2.488661
+# sd 10000 0.01680585
 
 
