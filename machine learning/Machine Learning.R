@@ -622,9 +622,11 @@ sd(rmse_vet)
 # deviation of RMSE from the 100 repetitions using a seed of 1. 
 # Hint: use the sapply or map functions.
 
+library(caret)
+library(tidyverse)
 
 rmse_f <- function(n){
-  #set.seed(1)
+  set.seed(1)
   Sigma <- 9*matrix(c(1.0, 0.5, 0.5, 1.0), 2, 2)
   dat <- MASS::mvrnorm(n, c(69, 69), Sigma) %>%
          data.frame() %>% setNames(c("x", "y"))
@@ -654,6 +656,9 @@ rmse_f <- function(n){
 
 n <- c(100, 500, 1000, 5000, 10000)
 
+set.seed(1)
+rmse_sapply <- sapply(n, rmse_f)
+
 # TEST
 r100 <- rmse_f(100)
 mean(r100)
@@ -675,11 +680,201 @@ r10000 <- rmse_f(10000)
 mean(r10000)
 sd(r10000)
 
-set.seed(1)
-rmse_sapply <- sapply(n, rmse_f)
+
 
 # CORRECT
 # mean 100 2.488661
 # sd 10000 0.01680585
 
 
+# --------- Q4
+# Now repeat the exercise from Q1, this time making the correlation between x and y larger, 
+# as in the following code:
+
+set.seed(1)
+n <- 100
+Sigma <- 9*matrix(c(1.0, 0.95, 0.95, 1.0), 2, 2)
+dat <- MASS::mvrnorm(n = 100, c(69, 69), Sigma) %>%
+  data.frame() %>% setNames(c("x", "y"))
+
+set.seed(1)
+N <- 100
+rmse_vet <- replicate(N, {
+  y <- dat$y
+  test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+  
+  train_set <- dat %>% slice(-test_index)
+  test_set  <- dat %>% slice(test_index)
+  
+  fit <- lm(y ~ x, data = train_set)
+  fit$coef
+  
+  y_hat <- predict(fit, test_set)
+  
+  sqrt(mean((y_hat - test_set$y)^2))
+})
+
+mean(rmse_vet)
+sd(rmse_vet)
+
+
+# --- Q6
+# Create a data set using the following code.
+
+set.seed(1)
+n <- 1000
+Sigma <- matrix(c(1.0, 0.75, 0.75, 0.75, 1.0, 0.25, 0.75, 0.25, 1.0), 3, 3)
+dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
+  data.frame() %>% setNames(c("y", "x_1", "x_2"))
+
+# Note that y is correlated with both x_1 and x_2 but the two predictors are independent of
+# each other, as seen by cor(dat).
+
+# Use the caret package to partition into a test and training set of equal size. Compare 
+# the RMSE when using just x_1, just x_2 and both x_1 and x_2. Train a linear model for 
+# each.
+
+# Which of the three models performs the best (has the lowest RMSE)?
+
+# -- With x_1
+set.seed(1)
+N <- 100
+rmse_x1 <- replicate(N, {
+  y <- dat$y
+  test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+  
+  train_set <- dat %>% slice(-test_index)
+  test_set  <- dat %>% slice(test_index)
+  
+  fit <- lm(y ~ x_1, data = train_set)
+
+  y_hat <- predict(fit, test_set)
+  
+  sqrt(mean((y_hat - test_set$y)^2))
+})
+
+# -- With x_2
+set.seed(1)
+N <- 100
+rmse_x2 <- replicate(N, {
+  y <- dat$y
+  test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+  
+  train_set <- dat %>% slice(-test_index)
+  test_set  <- dat %>% slice(test_index)
+  
+  fit <- lm(y ~ x_2, data = train_set)
+  
+  y_hat <- predict(fit, test_set)
+  
+  sqrt(mean((y_hat - test_set$y)^2))
+})
+
+
+# -- With x_1 and x_2
+set.seed(1)
+N <- 100
+rmse_x1_2 <- replicate(N, {
+  y <- dat$y
+  test_index <- createDataPartition(y,  times = 1, p = 0.50, list = FALSE)
+  
+  train_set <- dat %>% slice(-test_index)
+  test_set  <- dat %>% slice(test_index)
+  
+  fit <- lm(y ~ x_1 + x_2, data = train_set)
+  
+  y_hat <- predict(fit, test_set)
+  
+  sqrt(mean((y_hat - test_set$y)^2))
+})
+
+
+mean(rmse_x1)
+sd(rmse_x1)
+
+mean(rmse_x2)
+sd(rmse_x2)
+
+# THIS
+mean(rmse_x1_2)   
+sd(rmse_x1_2)
+
+# Explanation
+# The linear model with both predictors performs the best, as seen using the following 
+# code:
+  
+set.seed(1)
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+
+fit <- lm(y ~ x_1, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_1 + x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+
+# Q8
+# Repeat the exercise from q6 but now create an example in which x_1 and x_2 are 
+# highly correlated.
+
+set.seed(1)
+n <- 1000
+Sigma <- matrix(c(1.0, 0.75, 0.75, 0.75, 1.0, 0.95, 0.75, 0.95, 1.0), 3, 3)
+dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
+  data.frame() %>% setNames(c("y", "x_1", "x_2"))
+
+# Use the caret package to partition into a test and training set of equal size. 
+# Compare the RMSE when using just x_1, just x_2, and both x_1 and x_2.
+
+# Compare the results from q6 and q8. What can you conclude?
+
+set.seed(1)
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+
+fit <- lm(y ~ x_1, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_1 + x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+
+# Explanation
+# The following code will allow you to repeat the exercise in Q6 with predictors that 
+# are highly correlated:
+  
+  set.seed(1)
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+
+fit <- lm(y ~ x_1, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_1 + x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+
+# When the predictors are highly correlated with each other, adding addtional 
+# predictors does not improve the model substantially, thus RMSE stays roughly the same.
