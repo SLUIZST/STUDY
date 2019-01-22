@@ -54,7 +54,49 @@ mean(x)
 colMeans(x)
 
 
+# Q6
+# For each digit in the mnist training data, compute the proportion of pixels that are in 
+# the grey area, defined as values between 50 and 205. (To visualize this, you can make a 
+# boxplot by digit class.)
 
+# What proportion of pixels are in the grey area overall, defined as values between 50 and
+# 205?
+
+library(dslabs)
+mnist <- read_mnist()
+head(mnist)
+
+x <- mnist$train$images[1:1000,] 
+y <- mnist$train$labels[1:1000]
+
+# TEST
+grid <- matrix(x[3,], 28, 28)
+image(1:28, 1:28, grid)
+image(1:28, 1:28, grid[,28:1])
+
+library(tidyverse)
+
+avg <- rowMeans(x)
+data.frame(labels = as.factor(y), row_averages = avg) %>%
+  ggplot(aes(labels, row_averages)) +
+  geom_boxplot()
+
+
+# binarizing the data
+bin_x <- x
+bin_x[bin_x < 50  |  bin_x >  205] <- 0 
+bin_x[bin_x >= 50 &  bin_x <= 205] <- 1
+
+avg_gray <- rowMeans(bin_x)
+data.frame(labels = as.factor(y), row_averages = avg_gray) %>%
+  ggplot(aes(labels, row_averages)) +
+  geom_boxplot()
+
+mean(bin_x)  # OK
+
+# Other way
+avg_gray2 <- rowMeans(x >= 50 & x <= 205)
+mean(avg_gray2)
 
 
 
