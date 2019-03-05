@@ -102,7 +102,7 @@ accur <- map_df(ks, function(k){
 })
 
 
-# TESTE
+# TESTE -> merging
 train_set = (list('x' = train_set_x, 'y' = train_set_y))
 test_set = (list('x' = test_set_x, 'y' = test_set_y))
 
@@ -117,4 +117,48 @@ accuracy2 <- sapply(ks,function(k){
     list(k = k, acc = acc)
 })
 
+# TESTING 2
+set.seed(1)
+ks <- seq(1, 11, 2)
+
+accur <- map_df(ks, function(k){
+  #set.seed(1)
+  index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+  
+  train_set_x = x[-index,] 
+  test_set_x = x[index,] 
+  train_set_y = y[-index] 
+  test_set_y = y[index] 
+  
+  fit <- knn3(train_set_x, train_set_y, k = k)
+  
+  y_hat <- predict(fit, test_set_x, type = "class") %>% factor(levels = levels(test_set_y))
+  
+  cm <- confusionMatrix(data = y_hat, reference = test_set_y)
+  acc <- cm$overall["Accuracy"]
+  
+  list(k = k, acc = acc)
+})
+
+# TESTING 3
+
+accur <- map_df(ks, function(k){
+  #set.seed(1)
+  fit <- knn3(train_set_x, train_set_y, k = k)
+  
+  y_hat <- predict(fit, train_set_x, type = "class") %>% factor(levels = levels(train_set_y))
+  
+  cm <- confusionMatrix(data = y_hat, reference = train_set_y)
+  acc <- cm$overall["Accuracy"]
+  
+  list(k = k, acc = acc)
+})
+
+# => OK for k = 5 and K = 9
+
+
+
+
+
+# https://courses.edx.org/courses/course-v1:HarvardX+PH125.8x+2T2018/courseware/7c50a2fc6d44433fa902be8ed097f301/2b3a4f4bd3324c45aa8395f5c3bbfd1d/5?activate_block_id=block-v1%3AHarvardX%2BPH125.8x%2B2T2018%2Btype%40problem%2Bblock%40d33afa6058b8458b9a88b524b889eeb3
 

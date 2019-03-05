@@ -214,4 +214,98 @@ x=sapply(indexes, function(ind){
 sum(x)
 
 
+# Q3
+# Generate a random dataset using the following code:
+  
+set.seed(1)
+y <- rnorm(100, 0, 1)
+
+# Estimate the 75th quantile, which we know is qnorm(0.75), with the sample quantile: quantile(y, 0.75).
+
+# Run a Monte Carlo simulation with 10,000 repetitions to learn the expected value and standard error of 
+# this random variable. Set the seed to 1.
+
+B <- 10^4
+
+set.seed(1)
+
+Qtls <- replicate(B, {
+  y <- rnorm(100, 0, 1)
+  q <- quantile(y, 0.75)
+})
+
+
+qqnorm(Qtls)
+qqline(Qtls)
+
+mean(Qtls)
+sd(Qtls)
+
+
+# Explanation
+# The following code can be used to run the simulation and calculate the expected value and standard error:
+  
+set.seed(1)
+B <- 10000
+q_75 <- replicate(B, {
+  y <- rnorm(100, 0, 1)
+  quantile(y, 0.75)
+})
+
+mean(q_75)
+sd(q_75)
+
+
+# Q4
+# In practice, we can't run a Monte Carlo simulation. Use 10 bootstrap samples to estimate the standard error using 
+# just the initial sample y. Set the seed to 1.
+
+set.seed(1)
+indxs <- createResample(y, 10)
+
+x=sapply(indxs, function(ind){
+  quantile(y[ind], 0.75)
+})
+
+mean(x)
+sd(x)
+
+# Explanation
+# The following code can be used to take 10 bootstrap samples and calculate the expected value and standard error:
+  
+set.seed(1)
+indexes <- createResample(y, 10)
+q_75_star <- sapply(indexes, function(ind){
+  y_star <- y[ind]
+  quantile(y_star, 0.75)
+})
+mean(q_75_star)
+sd(q_75_star)
+
+
+# Q5
+# Repeat the exercise from Q4 but with 10,000 bootstrap samples instead of 10. Set the seed to 1.
+
+set.seed(1)
+indxs <- createResample(y, 10000)
+
+x=sapply(indxs, function(ind){
+  quantile(y[ind], 0.75)
+})
+
+mean(x)
+sd(x)
+
+
+# Explanation
+# The following code can be used to take 10,000 bootstrap samples and calculate the expected value and standard error:
+  
+set.seed(1)
+indexes <- createResample(y, 10000)
+q_75_star <- sapply(indexes, function(ind){
+  y_star <- y[ind]
+  quantile(y_star, 0.75)
+})
+mean(q_75_star)
+sd(q_75_star)
 
